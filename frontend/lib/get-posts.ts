@@ -1,7 +1,3 @@
-import {
-  isServer,
-} from '@tanstack/react-query'
-
 type GetPostsParams = {
   page?: number
   per_page?: number
@@ -37,9 +33,6 @@ export async function getPosts(params: GetPostsParams = {}) {
   }
 
   const json = await res.json()
-
-  // INSERE UM DELAY DE 10 SEGUNDOS ANTES DE CONTINUAR
-  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   return {
     posts: json.data,

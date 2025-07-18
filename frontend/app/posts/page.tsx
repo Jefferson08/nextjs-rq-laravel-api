@@ -15,7 +15,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
 
   const queryParams = postsQuerySchema.parse(params)
 
-  queryClient.prefetchQuery({
+  await queryClient.prefetchQuery({
     queryKey: ["posts", queryParams],
     queryFn: () => getPosts(queryParams),
   })
