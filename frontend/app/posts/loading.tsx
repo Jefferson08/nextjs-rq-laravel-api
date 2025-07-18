@@ -1,5 +1,3 @@
 export default function LoadingPage() {
-    return (
-        <h1>Carregando</h1>
-    )
+  return <h1>Carregando</h1>;
 }

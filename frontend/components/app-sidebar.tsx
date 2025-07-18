@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { usePathname } from "next/navigation"
+import * as React from "react";
+import { usePathname } from "next/navigation";
 import {
   Icon,
   IconBomb,
   IconList,
   IconInnerShadowTop,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -19,31 +19,31 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 // 🔥 Tipos para navMain e sidebarData
 export type NavSubItem = {
-  title: string
-  url: string
-  isActive?: boolean
-}
+  title: string;
+  url: string;
+  isActive?: boolean;
+};
 
 export type NavItem = {
-  title: string
-  url: string
-  icon?:Icon
-  isActive?: boolean
-  items?: NavSubItem[]
-}
+  title: string;
+  url: string;
+  icon?: Icon;
+  isActive?: boolean;
+  items?: NavSubItem[];
+};
 
 export type SidebarData = {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
-  navMain: NavItem[]
-}
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  navMain: NavItem[];
+};
 
 // 📦 Dados do sidebar tipados
 export const sidebarData: SidebarData = {
@@ -69,27 +69,27 @@ export const sidebarData: SidebarData = {
     //   ],
     // },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   // Calcula isActive para itens e subitens
   const navMain = sidebarData.navMain.map((item) => {
     const subItems = item.items?.map((sub) => ({
       ...sub,
       isActive: pathname === sub.url,
-    }))
+    }));
 
     const isParentActive =
-      pathname === item.url || subItems?.some((sub) => sub.isActive)
+      pathname === item.url || subItems?.some((sub) => sub.isActive);
 
     return {
       ...item,
       isActive: isParentActive,
       items: subItems,
-    }
-  })
+    };
+  });
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -115,5 +115,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={sidebarData.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

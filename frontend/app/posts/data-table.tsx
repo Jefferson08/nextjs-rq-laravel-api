@@ -1,20 +1,38 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { parseAsInteger, parseAsString, useQueryState } from "nuqs"
-import { useQuery } from "@tanstack/react-query"
+} from "@tanstack/react-table";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { useQuery } from "@tanstack/react-query";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -22,39 +40,39 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { Skeleton } from "@/components/ui/skeleton"
-import { columns } from "./columns"
-import { getPosts } from "@/lib/get-posts"
-import { postsQuerySchema, postsQueryDefault } from "./posts-query-schema"
+import { Skeleton } from "@/components/ui/skeleton";
+import { columns } from "./columns";
+import { getPosts } from "@/lib/get-posts";
+import { postsQuerySchema, postsQueryDefault } from "./posts-query-schema";
 
 export function DataTable() {
   // 🌱 URL Params (nuqs)
   const [pageRaw, setPage] = useQueryState(
     "page",
-    parseAsInteger.withDefault(postsQueryDefault.page)
-  )
+    parseAsInteger.withDefault(postsQueryDefault.page),
+  );
   const [perPageRaw, setPerPage] = useQueryState(
     "per_page",
-    parseAsInteger.withDefault(postsQueryDefault.per_page)
-  )
+    parseAsInteger.withDefault(postsQueryDefault.per_page),
+  );
   const [sortBy] = useQueryState(
     "sort_by",
-    parseAsString.withDefault(postsQueryDefault.sort_by)
-  )
+    parseAsString.withDefault(postsQueryDefault.sort_by),
+  );
   const [sortDir] = useQueryState(
     "sort_dir",
-    parseAsString.withDefault(postsQueryDefault.sort_dir)
-  )
+    parseAsString.withDefault(postsQueryDefault.sort_dir),
+  );
   const [search, setSearch] = useQueryState(
     "search",
-    parseAsString.withDefault(postsQueryDefault.search)
-  )
+    parseAsString.withDefault(postsQueryDefault.search),
+  );
   const [status, setStatus] = useQueryState(
     "status",
-    parseAsString.withDefault(postsQueryDefault.status)
-  )
+    parseAsString.withDefault(postsQueryDefault.status),
+  );
 
   // 📝 Parse URL params com defaults
   const queryParams = postsQuerySchema.parse({
@@ -64,13 +82,13 @@ export function DataTable() {
     sort_dir: sortDir,
     search,
     status,
-  })
+  });
 
   // 🗂 Fetch data
   const { data, isLoading } = useQuery({
     queryKey: ["posts", queryParams],
     queryFn: () => getPosts(queryParams),
-  })
+  });
 
   // 📊 React Table
   const table = useReactTable({
@@ -93,13 +111,15 @@ export function DataTable() {
     },
     onPaginationChange: (updater) => {
       const next =
-        typeof updater === "function" ? updater(table.getState().pagination) : updater
-      setPage(next.pageIndex + 1)
-      setPerPage(next.pageSize)
+        typeof updater === "function"
+          ? updater(table.getState().pagination)
+          : updater;
+      setPage(next.pageIndex + 1);
+      setPerPage(next.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-  })
+  });
 
   return (
     <div className="w-full space-y-4">
@@ -110,8 +130,8 @@ export function DataTable() {
           placeholder="Search posts..."
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
+            setSearch(e.target.value);
+            setPage(1);
           }}
           className="max-w-sm"
         />
@@ -122,8 +142,8 @@ export function DataTable() {
           <Select
             value={status || "all"}
             onValueChange={(value) => {
-              setStatus(value === "all" ? "" : value)
-              setPage(1)
+              setStatus(value === "all" ? "" : value);
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-[180px]">
@@ -147,13 +167,16 @@ export function DataTable() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {table.getAllColumns()
+              {table
+                .getAllColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.id}
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
                     className="capitalize"
                   >
                     {column.id.replace(/_/g, " ")}
@@ -175,7 +198,10 @@ export function DataTable() {
                     {isLoading && header.column.id !== "actions" ? (
                       <Skeleton className="h-4 w-24 rounded" />
                     ) : header.isPlaceholder ? null : (
-                      flexRender(header.column.columnDef.header, header.getContext())
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )
                     )}
                   </TableHead>
                 ))}
@@ -183,36 +209,43 @@ export function DataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading
-              ? [...Array(queryParams.per_page)].map((_, rowIndex) => (
+            {isLoading ? (
+              [...Array(queryParams.per_page)].map((_, rowIndex) => (
                 <TableRow key={`loading-${rowIndex}`}>
                   {table.getVisibleLeafColumns().map((col) => (
                     <TableCell key={col.id}>
                       <Skeleton
-                        className={`w-full rounded ${col.id === "actions" ? "h-9 w-9" : "h-4"
-                          }`}
+                        className={`w-full rounded ${
+                          col.id === "actions" ? "h-9 w-9" : "h-4"
+                        }`}
                       />
                     </TableCell>
                   ))}
                 </TableRow>
               ))
-              : table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No results.
-                  </TableCell>
+            ) : table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -258,5 +291,5 @@ export function DataTable() {
         </div>
       </div>
     </div>
-  )
+  );
 }

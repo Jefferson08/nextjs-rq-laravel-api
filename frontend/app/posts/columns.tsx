@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import { z } from "zod"
-import { ColumnDef } from "@tanstack/react-table"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
+import { z } from "zod";
+import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   IconDotsVertical,
   IconArrowUp,
   IconArrowDown,
   IconArrowsSort,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { useQueryState } from "nuqs"
-import { parseAsString } from "nuqs"
+import { useQueryState } from "nuqs";
+import { parseAsString } from "nuqs";
 
 // 📦 Schema para validar os posts
 export const schema = z.object({
@@ -31,35 +31,34 @@ export const schema = z.object({
   published_at: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
-})
+});
 
-export type Post = z.infer<typeof schema>
+export type Post = z.infer<typeof schema>;
 
 // 🔥 Componente Header com ordenação pela api
-import { postsQueryDefault } from "./posts-query-schema"
-import { cn } from "@/lib/utils"
+import { postsQueryDefault } from "./posts-query-schema";
+import { cn } from "@/lib/utils";
 
 function ServerSortHeader(accessor: string, label: string) {
   return function HeaderComponent() {
     const [sortBy, setSortBy] = useQueryState(
       "sort_by",
-      parseAsString.withDefault(postsQueryDefault.sort_by)
-    )
-    const [sortDirRaw, setSortDir] = useQueryState("sort_dir", parseAsString)
-    const effectiveSortDir = sortDirRaw ?? postsQueryDefault.sort_dir
+      parseAsString.withDefault(postsQueryDefault.sort_by),
+    );
+    const [sortDirRaw, setSortDir] = useQueryState("sort_dir", parseAsString);
+    const effectiveSortDir = sortDirRaw ?? postsQueryDefault.sort_dir;
 
-    const isActive = sortBy === accessor
+    const isActive = sortBy === accessor;
 
     const toggleSort = () => {
       if (!isActive) {
-        setSortBy(accessor)
-        setSortDir("asc")
+        setSortBy(accessor);
+        setSortDir("asc");
       } else {
         // Alterna sempre quando ativo
-        setSortDir(effectiveSortDir === "asc" ? "desc" : "asc")
+        setSortDir(effectiveSortDir === "asc" ? "desc" : "asc");
       }
-    }
-
+    };
 
     return (
       <Button
@@ -79,8 +78,8 @@ function ServerSortHeader(accessor: string, label: string) {
           <IconArrowsSort className="ml-1 h-4 w-4 opacity-50" />
         )}
       </Button>
-    )
-  }
+    );
+  };
 }
 
 export const columns: ColumnDef<Post>[] = [
@@ -137,7 +136,9 @@ export const columns: ColumnDef<Post>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.original.status === "published" ? "default" : "secondary"}>
+      <Badge
+        variant={row.original.status === "published" ? "default" : "secondary"}
+      >
         {row.original.status}
       </Badge>
     ),
@@ -148,8 +149,10 @@ export const columns: ColumnDef<Post>[] = [
     accessorKey: "published_at",
     header: ServerSortHeader("published_at", "Published At"),
     cell: ({ row }) => {
-      const date = new Date(row.original.published_at)
-      return <span>{isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}</span>
+      const date = new Date(row.original.published_at);
+      return (
+        <span>{isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}</span>
+      );
     },
   },
 
@@ -171,4 +174,4 @@ export const columns: ColumnDef<Post>[] = [
     ),
     enableHiding: false,
   },
-]
+];
