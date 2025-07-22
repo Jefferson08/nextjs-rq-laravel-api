@@ -42,7 +42,7 @@ function ServerSortHeader(accessor: string, label: string) {
   return function HeaderComponent() {
     const [sortBy, setSortBy] = useQueryState(
       "sort_by",
-      parseAsString.withDefault(postsQueryDefault.sort_by)
+      parseAsString.withDefault(postsQueryDefault.sort_by),
     );
     const [sortDirRaw, setSortDir] = useQueryState("sort_dir", parseAsString);
     const effectiveSortDir = sortDirRaw ?? postsQueryDefault.sort_dir;

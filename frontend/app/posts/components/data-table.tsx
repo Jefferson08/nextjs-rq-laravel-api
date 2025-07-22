@@ -50,27 +50,27 @@ export function PostsTable() {
   // 🌱 URL Params (nuqs)
   const [pageRaw, setPage] = useQueryState(
     "page",
-    parseAsInteger.withDefault(postsQueryDefault.page)
+    parseAsInteger.withDefault(postsQueryDefault.page),
   );
   const [perPageRaw, setPerPage] = useQueryState(
     "per_page",
-    parseAsInteger.withDefault(postsQueryDefault.per_page)
+    parseAsInteger.withDefault(postsQueryDefault.per_page),
   );
   const [sortBy] = useQueryState(
     "sort_by",
-    parseAsString.withDefault(postsQueryDefault.sort_by)
+    parseAsString.withDefault(postsQueryDefault.sort_by),
   );
   const [sortDir] = useQueryState(
     "sort_dir",
-    parseAsString.withDefault(postsQueryDefault.sort_dir)
+    parseAsString.withDefault(postsQueryDefault.sort_dir),
   );
   const [search, setSearch] = useQueryState(
     "search",
-    parseAsString.withDefault(postsQueryDefault.search)
+    parseAsString.withDefault(postsQueryDefault.search),
   );
   const [status, setStatus] = useQueryState(
     "status",
-    parseAsString.withDefault(postsQueryDefault.status)
+    parseAsString.withDefault(postsQueryDefault.status),
   );
 
   // 📝 Parse URL params com defaults
@@ -199,7 +199,7 @@ export function PostsTable() {
                     ) : header.isPlaceholder ? null : (
                       flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )
                     )}
                   </TableHead>
@@ -229,7 +229,7 @@ export function PostsTable() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
