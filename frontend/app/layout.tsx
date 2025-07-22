@@ -1,11 +1,6 @@
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import { QueryProvider } from "@/components/providers/query-provider";
-import { NuqsAdapter } from "nuqs/adapters/next/app"; // 👈 importa o adapter
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,40 +20,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NuqsAdapter>
-          {" "}
-          {/* 👈 Envolve toda a árvore */}
-          <ThemeProvider>
-            <QueryProvider>
-              <SidebarProvider
-                style={
-                  {
-                    "--sidebar-width": "calc(var(--spacing) * 72)",
-                    "--header-height": "calc(var(--spacing) * 12)",
-                  } as React.CSSProperties
-                }
-              >
-                <AppSidebar variant="inset" />
-                <SidebarInset>
-                  <SiteHeader />
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="@container/main flex flex-1 flex-col gap-2">
-                      {children}
-                    </div>
-                  </div>
-                </SidebarInset>
-              </SidebarProvider>
-            </QueryProvider>
-          </ThemeProvider>
-        </NuqsAdapter>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

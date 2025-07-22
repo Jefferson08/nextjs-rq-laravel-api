@@ -1,25 +1,24 @@
 "use client";
 
-import { z } from "zod";
-import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  IconDotsVertical,
-  IconArrowUp,
   IconArrowDown,
   IconArrowsSort,
+  IconArrowUp,
+  IconDotsVertical,
 } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
+import { z } from "zod";
 
-import { useQueryState } from "nuqs";
-import { parseAsString } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs";
 
 // 📦 Schema para validar os posts
 export const schema = z.object({
@@ -36,14 +35,14 @@ export const schema = z.object({
 export type Post = z.infer<typeof schema>;
 
 // 🔥 Componente Header com ordenação pela api
-import { postsQueryDefault } from "./posts-query-schema";
 import { cn } from "@/lib/utils";
+import { postsQueryDefault } from "../posts-query-schema";
 
 function ServerSortHeader(accessor: string, label: string) {
   return function HeaderComponent() {
     const [sortBy, setSortBy] = useQueryState(
       "sort_by",
-      parseAsString.withDefault(postsQueryDefault.sort_by),
+      parseAsString.withDefault(postsQueryDefault.sort_by)
     );
     const [sortDirRaw, setSortDir] = useQueryState("sort_dir", parseAsString);
     const effectiveSortDir = sortDirRaw ?? postsQueryDefault.sort_dir;

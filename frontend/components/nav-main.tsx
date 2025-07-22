@@ -1,6 +1,9 @@
 "use client";
 
-import { IconChevronRight, type Icon } from "@tabler/icons-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -16,53 +19,83 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import Link from "next/link";
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string;
-    url: string;
-    icon?: Icon;
-    isActive?: boolean;
-    items?: {
-      title: string;
-      url: string;
-      isActive?: boolean; // suporta isActive também nos subitens
-    }[];
-  }[];
-}) {
+type NavSubItem = {
+  title: string;
+  url: string;
+};
+
+type NavMainItem = {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean; // opcional se calcularmos automaticamente
+  items?: NavSubItem[];
+};
+
+export function NavMain({ items }: { items: NavMainItem[] }) {
+  const pathname = usePathname();
+
+  // Marca ativos dinamicamente
+  const navItems = items.map((item) => {
+    const subItems = item.items?.map((sub) => ({
+      ...sub,
+      isActive: pathname === sub.url,
+    }));
+
+    const isParentActive =
+      pathname === item.url || subItems?.some((sub) => sub.isActive);
+
+    return {
+      ...item,
+      isActive: isParentActive,
+      items: subItems,
+    };
+  });
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Menu</SidebarGroupLabel>
+      <SidebarGroupLabel>Management</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) =>
-          item.items && item.items.length > 0 ? (
-            // Item com submenus
-            <Collapsible
-              key={item.title}
-              asChild
-              defaultOpen={
-                item.isActive || item.items.some((sub) => sub.isActive)
-              }
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
+        {navItems.map((item) => (
+          <Collapsible
+            key={item.title}
+            asChild
+            defaultOpen={item.isActive}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  className={item.isActive ? "bg-muted" : ""}
+                  asChild
+                >
+                  {item.items ? (
+                    // Item pai com subitens (não clicável)
+                    <div className="flex items-center w-full">
+                      {item.icon && <item.icon className="mr-2" />}
+                      <span>{item.title}</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </div>
+                  ) : (
+                    // Item pai sem subitens (clicável)
+                    <Link href={item.url} className="flex items-center w-full">
+                      {item.icon && <item.icon className="mr-2" />}
+                      <span>{item.title}</span>
+                    </Link>
+                  )}
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+
+              {item.items && (
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {item.items.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton
                           asChild
-                          data-active={subItem.isActive}
+                          className={subItem.isActive ? "bg-muted" : ""}
                         >
                           <Link href={subItem.url}>
                             <span>{subItem.title}</span>
@@ -72,24 +105,10 @@ export function NavMain({
                     ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          ) : (
-            // Item sem submenus
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                tooltip={item.title}
-                data-active={item.isActive}
-              >
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
-          ),
-        )}
+          </Collapsible>
+        ))}
       </SidebarMenu>
     </SidebarGroup>
   );

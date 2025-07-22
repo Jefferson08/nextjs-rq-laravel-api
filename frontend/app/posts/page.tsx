@@ -1,8 +1,8 @@
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/app/get-query-client";
 import { getPosts } from "@/lib/get-posts";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { PostsTable } from "./components/data-table";
 import { postsQuerySchema } from "./posts-query-schema";
-import { DataTable } from "./data-table";
 
 interface PageProps {
   searchParams: Record<string, string | string[] | undefined>;
@@ -22,7 +22,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <DataTable />
+      <PostsTable />
     </HydrationBoundary>
   );
 }

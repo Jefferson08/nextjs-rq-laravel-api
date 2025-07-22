@@ -1,13 +1,7 @@
 "use client";
 
+import { Settings2, TableProperties } from "lucide-react";
 import * as React from "react";
-import { usePathname } from "next/navigation";
-import {
-  Icon,
-  IconBomb,
-  IconList,
-  IconInnerShadowTop,
-} from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -19,34 +13,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
+import { IconInnerShadowTop } from "@tabler/icons-react";
+import Link from "next/link";
 
-// 🔥 Tipos para navMain e sidebarData
-export type NavSubItem = {
-  title: string;
-  url: string;
-  isActive?: boolean;
-};
-
-export type NavItem = {
-  title: string;
-  url: string;
-  icon?: Icon;
-  isActive?: boolean;
-  items?: NavSubItem[];
-};
-
-export type SidebarData = {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-  navMain: NavItem[];
-};
-
-// 📦 Dados do sidebar tipados
-export const sidebarData: SidebarData = {
+// This is sample data.
+const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
@@ -56,43 +29,19 @@ export const sidebarData: SidebarData = {
     {
       title: "Posts",
       url: "/posts",
-      icon: IconList,
+      icon: TableProperties,
     },
-    // {
-    //   title: "Models",
-    //   url: "/models",
-    //   icon: IconBomb,
-    //   items: [
-    //     { title: "Genesis", url: "/models/genesis" },
-    //     { title: "Explorer", url: "/models/explorer" },
-    //     { title: "Quantum", url: "/models/quantum" },
-    //   ],
-    // },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings2,
+    },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname();
-
-  // Calcula isActive para itens e subitens
-  const navMain = sidebarData.navMain.map((item) => {
-    const subItems = item.items?.map((sub) => ({
-      ...sub,
-      isActive: pathname === sub.url,
-    }));
-
-    const isParentActive =
-      pathname === item.url || subItems?.some((sub) => sub.isActive);
-
-    return {
-      ...item,
-      isActive: isParentActive,
-      items: subItems,
-    };
-  });
-
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -100,20 +49,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/posts" className="flex items-center gap-2">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser user={data.user} />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

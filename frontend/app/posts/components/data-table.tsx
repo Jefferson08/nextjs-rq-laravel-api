@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,8 +8,22 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import { useQuery } from "@tanstack/react-query";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -18,21 +32,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -43,35 +42,35 @@ import {
 } from "@tabler/icons-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { columns } from "./columns";
 import { getPosts } from "@/lib/get-posts";
-import { postsQuerySchema, postsQueryDefault } from "./posts-query-schema";
+import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
+import { columns } from "./columns";
 
-export function DataTable() {
+export function PostsTable() {
   // 🌱 URL Params (nuqs)
   const [pageRaw, setPage] = useQueryState(
     "page",
-    parseAsInteger.withDefault(postsQueryDefault.page),
+    parseAsInteger.withDefault(postsQueryDefault.page)
   );
   const [perPageRaw, setPerPage] = useQueryState(
     "per_page",
-    parseAsInteger.withDefault(postsQueryDefault.per_page),
+    parseAsInteger.withDefault(postsQueryDefault.per_page)
   );
   const [sortBy] = useQueryState(
     "sort_by",
-    parseAsString.withDefault(postsQueryDefault.sort_by),
+    parseAsString.withDefault(postsQueryDefault.sort_by)
   );
   const [sortDir] = useQueryState(
     "sort_dir",
-    parseAsString.withDefault(postsQueryDefault.sort_dir),
+    parseAsString.withDefault(postsQueryDefault.sort_dir)
   );
   const [search, setSearch] = useQueryState(
     "search",
-    parseAsString.withDefault(postsQueryDefault.search),
+    parseAsString.withDefault(postsQueryDefault.search)
   );
   const [status, setStatus] = useQueryState(
     "status",
-    parseAsString.withDefault(postsQueryDefault.status),
+    parseAsString.withDefault(postsQueryDefault.status)
   );
 
   // 📝 Parse URL params com defaults
@@ -200,7 +199,7 @@ export function DataTable() {
                     ) : header.isPlaceholder ? null : (
                       flexRender(
                         header.column.columnDef.header,
-                        header.getContext(),
+                        header.getContext()
                       )
                     )}
                   </TableHead>
@@ -230,7 +229,7 @@ export function DataTable() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}

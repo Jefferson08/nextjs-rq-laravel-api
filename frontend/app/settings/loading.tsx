@@ -1,5 +1,5 @@
 import Loading from "@/components/loading";
 
-export default function LoadingPosts() {
+export default function LoadingSettings() {
   return <Loading />;
 }
