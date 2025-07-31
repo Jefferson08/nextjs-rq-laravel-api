@@ -1,5 +1,5 @@
-import { getQueryClient } from "@/app/get-query-client";
 import { getPosts } from "@/lib/get-posts";
+import { getQueryClient } from "@/lib/get-query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { PostsTable } from "./components/data-table";
 import { postsQuerySchema } from "./posts-query-schema";
