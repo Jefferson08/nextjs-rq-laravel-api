@@ -6,8 +6,10 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
+  RowSelectionState,
 } from "@tanstack/react-table";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +50,9 @@ import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
 import { columns } from "./columns";
 
 export function PostsTable() {
+  // 🎯 Estado local para seleção de linhas
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
   // 🌱 URL Params (nuqs)
   const [pageRaw, setPage] = useQueryState(
     "page",
@@ -90,6 +95,17 @@ export function PostsTable() {
     queryFn: () => getPosts(queryParams),
   });
 
+  // 🔄 Limpar seleções quando os dados mudarem (trocar de página, filtros, etc)
+  useEffect(() => {
+    setRowSelection({});
+  }, [
+    queryParams.page,
+    queryParams.search,
+    queryParams.status,
+    queryParams.sort_by,
+    queryParams.sort_dir,
+  ]);
+
   // 📊 React Table
   const table = useReactTable({
     data: data?.posts ?? [],
@@ -97,6 +113,8 @@ export function PostsTable() {
     pageCount: data?.lastPage ?? 0,
     manualPagination: true,
     manualSorting: true,
+    enableRowSelection: true,
+    getRowId: (row) => String(row.id), // Usar o ID real do post como identificador único
     state: {
       pagination: {
         pageIndex: queryParams.page - 1,
@@ -108,6 +126,7 @@ export function PostsTable() {
           desc: queryParams.sort_dir === "desc",
         },
       ],
+      rowSelection,
     },
     onPaginationChange: (updater) => {
       const next =
@@ -117,6 +136,7 @@ export function PostsTable() {
       setPage(next.pageIndex + 1);
       setPerPage(next.pageSize);
     },
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
