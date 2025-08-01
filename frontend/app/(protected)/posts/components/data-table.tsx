@@ -5,11 +5,11 @@ import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
-  useReactTable,
   RowSelectionState,
+  useReactTable,
 } from "@tanstack/react-table";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,16 +42,22 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
+  IconPlus,
 } from "@tabler/icons-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPosts } from "@/lib/get-posts";
 import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
-import { columns } from "./columns";
+import { columns, type Post } from "./columns";
+import { UpsertPost } from "./upsert-post";
 
 export function PostsTable() {
   // 🎯 Estado local para seleção de linhas
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  
+  // 🎯 Estado do modal de upsert
+  const [isUpsertModalOpen, setIsUpsertModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   // 🌱 URL Params (nuqs)
   const [pageRaw, setPage] = useQueryState(
@@ -137,46 +143,89 @@ export function PostsTable() {
       setPerPage(next.pageSize);
     },
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
+  getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
+  // 🎯 Handlers do modal
+  const handleOpenCreateModal = () => {
+    setEditingPost(null);
+    setIsUpsertModalOpen(true);
+  };
+
+  const handleOpenEditModal = (post: Post) => {
+    setEditingPost(post);
+    setIsUpsertModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsUpsertModalOpen(false);
+    setEditingPost(null);
+  };
+
+  const handleSubmitPost = async (data: any) => {
+    // TODO: Implementar a lógica de criação/edição via API
+    console.log('Post data:', data);
+    console.log('Is editing:', Boolean(editingPost));
+    
+    // Placeholder para a implementação da API
+    // if (editingPost) {
+    //   await updatePost(editingPost.id, data);
+    // } else {
+    //   await createPost(data);
+    // }
+    
+    // Simular delay da API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  };
 
   return (
     <div className="w-full space-y-4">
       {/* Filters */}
       <div className="flex items-center justify-between gap-4">
-        {/* 🔍 Search */}
-        <Input
-          placeholder="Search posts..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="max-w-sm"
-        />
-
-        {/* 🏷 Status + Columns */}
-        <div className="flex items-center gap-2">
-          {/* Status Filter */}
-          <Select
-            value={status || "all"}
-            onValueChange={(value) => {
-              setStatus(value === "all" ? "" : value);
+        {/* 🔍 Left side: Search + Status Filter */}
+        <div className="flex items-center gap-4">
+          {/* Search */}
+          <Input
+            placeholder="Search posts..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
               setPage(1);
             }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
+            className="w-80"
+          />
 
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <Label
+              htmlFor="status-filter"
+              className="text-sm font-medium whitespace-nowrap"
+            >
+              Filter status:
+            </Label>
+            <Select
+              value={status || "all"}
+              onValueChange={(value) => {
+                setStatus(value === "all" ? "" : value);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger id="status-filter" className="w-[140px]">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* 🏷 Right side: Columns + Add Post */}
+        <div className="flex items-center gap-2">
           {/* Columns Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -204,6 +253,12 @@ export function PostsTable() {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Add Post Button */}
+          <Button variant="outline" size="sm" onClick={handleOpenCreateModal}>
+            Add Post
+            <IconPlus className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -346,6 +401,15 @@ export function PostsTable() {
           </div>
         </div>
       </div>
+
+      {/* 🎯 Modal de Upsert Post */}
+      <UpsertPost
+        open={isUpsertModalOpen}
+        onOpenChange={handleCloseModal}
+        post={editingPost}
+        onSubmit={handleSubmitPost}
+        isLoading={false} // TODO: Implementar estado de loading da API
+      />
     </div>
   );
 }
