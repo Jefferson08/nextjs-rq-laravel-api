@@ -19,6 +19,17 @@ export const csrfClient = axios.create({
   withCredentials: true,
 });
 
+// Cliente para rotas de autenticação (sem prefixo /api) - Laravel Breeze Next pattern
+export const authClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  timeout: 10000,
+  withCredentials: true,
+});
+
 // Função para garantir que temos o CSRF token
 let csrfTokenFetched = false;
 
@@ -128,6 +139,88 @@ apiClient.interceptors.response.use(
     } else {
       // Erro na configuração da requisição
       console.error("Request setup error:", error.message);
+      return Promise.reject({
+        status: 0,
+        message: error.message || "Request configuration error",
+        errors: null,
+      });
+    }
+  },
+);
+
+// Interceptor para authClient (rotas de autenticação)
+authClient.interceptors.request.use(
+  async (config) => {
+    // Buscar CSRF token para métodos que modificam dados
+    if (
+      config.method &&
+      ["post", "put", "patch", "delete"].includes(config.method.toLowerCase())
+    ) {
+      await ensureCsrfToken();
+
+      // Adicionar CSRF token no header
+      const csrfToken = getCSRFToken();
+      if (csrfToken) {
+        config.headers["X-XSRF-TOKEN"] = csrfToken;
+      }
+    }
+
+    console.log(
+      `🔐 Auth Request: ${config.method?.toUpperCase()} ${config.url}`,
+    );
+    return config;
+  },
+  (error) => {
+    console.error("❌ Auth Request Error:", error);
+    return Promise.reject(error);
+  },
+);
+
+// Interceptor para responses do authClient
+authClient.interceptors.response.use(
+  (response) => {
+    console.log(`✅ Auth Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
+  (error) => {
+    // Tratamento similar ao apiClient
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 401:
+          console.log("🔒 Auth: Unauthorized");
+          break;
+        case 403:
+          console.error("Auth: Forbidden");
+          break;
+        case 404:
+          console.error("Auth: Not found");
+          break;
+        case 422:
+          console.error("Auth: Validation errors:", data.errors);
+          break;
+        case 500:
+          console.error("Auth: Internal server error");
+          break;
+        default:
+          console.error(`Auth: HTTP ${status}:`, data.message || "Unknown error");
+      }
+
+      return Promise.reject({
+        status,
+        message: data.message || "An error occurred",
+        errors: data.errors || null,
+      });
+    } else if (error.request) {
+      console.error("Auth: Network error");
+      return Promise.reject({
+        status: 0,
+        message: "Network error - please check your connection",
+        errors: null,
+      });
+    } else {
+      console.error("Auth: Request setup error:", error.message);
       return Promise.reject({
         status: 0,
         message: error.message || "Request configuration error",

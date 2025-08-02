@@ -1,4 +1,4 @@
-import { apiClient, csrfClient } from "./client";
+import { apiClient, authClient, csrfClient } from "./client";
 import type {
   AuthResponse,
   EmailVerificationResponse,
@@ -17,19 +17,19 @@ export const authService = {
 
   // 🔐 Login do usuário
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>("/login", data);
+    const response = await authClient.post<AuthResponse>("/login", data);
     return response.data;
   },
 
   // 📝 Registro de novo usuário
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>("/register", data);
+    const response = await authClient.post<AuthResponse>("/register", data);
     return response.data;
   },
 
   // 🚪 Logout do usuário
   async logout(): Promise<void> {
-    await apiClient.post("/logout");
+    await authClient.post("/logout");
   },
 
   // 👤 Buscar dados do usuário autenticado
@@ -40,7 +40,7 @@ export const authService = {
 
   // 📧 Solicitar reset de senha
   async forgotPassword(data: ForgotPasswordData): Promise<{ message: string }> {
-    const response = await apiClient.post<{ message: string }>(
+    const response = await authClient.post<{ message: string }>(
       "/forgot-password",
       data,
     );
@@ -49,7 +49,7 @@ export const authService = {
 
   // 🔑 Reset de senha
   async resetPassword(data: ResetPasswordData): Promise<{ message: string }> {
-    const response = await apiClient.post<{ message: string }>(
+    const response = await authClient.post<{ message: string }>(
       "/reset-password",
       data,
     );
@@ -58,7 +58,7 @@ export const authService = {
 
   // ✉️ Reenviar email de verificação
   async resendEmailVerification(): Promise<EmailVerificationResponse> {
-    const response = await apiClient.post<EmailVerificationResponse>(
+    const response = await authClient.post<EmailVerificationResponse>(
       "/email/verification-notification",
     );
     return response.data;
@@ -71,7 +71,7 @@ export const authService = {
     expires: string,
     signature: string,
   ): Promise<void> {
-    await apiClient.get(`/verify-email/${id}/${hash}`, {
+    await authClient.get(`/verify-email/${id}/${hash}`, {
       params: { expires, signature },
     });
   },

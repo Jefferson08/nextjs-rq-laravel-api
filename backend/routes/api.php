@@ -8,8 +8,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Rotas REST para posts
-Route::apiResource('posts', PostController::class);
-
-// Rotas de autenticação para API
-require __DIR__.'/auth.php';
+// Rotas REST para posts (protegidas por autenticação)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('posts', PostController::class);
+});
