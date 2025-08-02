@@ -204,7 +204,10 @@ authClient.interceptors.response.use(
           console.error("Auth: Internal server error");
           break;
         default:
-          console.error(`Auth: HTTP ${status}:`, data.message || "Unknown error");
+          console.error(
+            ` Auth: HTTP ${status}:`,
+            data.message || "Unknown error",
+          );
       }
 
       return Promise.reject({
