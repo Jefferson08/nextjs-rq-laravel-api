@@ -19,20 +19,19 @@ import { ColumnDef } from "@tanstack/react-table";
 import { z } from "zod";
 
 import { parseAsString, useQueryState } from "nuqs";
+import type { Post } from "@/lib/api/types";
 
-// 📦 Schema para validar os posts
+// 📦 Schema para validar os posts (mantido para compatibilidade se necessário)
 export const schema = z.object({
   id: z.number(),
   title: z.string(),
   content: z.string(),
   author: z.string(),
   status: z.string(),
-  published_at: z.string(),
+  published_at: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 });
-
-export type Post = z.infer<typeof schema>;
 
 // 🔥 Componente Header com ordenação pela api
 import { cn } from "@/lib/utils";
@@ -156,7 +155,10 @@ export const createColumns = (
     accessorKey: "published_at",
     header: ServerSortHeader("published_at", "Published At"),
     cell: ({ row }) => {
-      const date = new Date(row.original.published_at);
+      const publishedAt = row.original.published_at;
+      if (!publishedAt) return <span>—</span>;
+
+      const date = new Date(publishedAt);
       return (
         <span>{isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}</span>
       );

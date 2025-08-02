@@ -41,7 +41,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-import type { Post } from "./columns";
+import type { Post } from "@/lib/api/types";
 
 // Schema de validação baseado nas regras do PostController
 const postSchema = z.object({
@@ -54,9 +54,7 @@ const postSchema = z.object({
     .string()
     .min(1, "Author is required")
     .max(100, "Author must be less than 100 characters"),
-  status: z.enum(["draft", "published", "archived"], {
-    required_error: "Please select a status",
-  }),
+  status: z.enum(["draft", "published", "archived"]),
   published_at: z.date().optional(),
 });
 

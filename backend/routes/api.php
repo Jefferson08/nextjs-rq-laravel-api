@@ -10,3 +10,6 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 // Rotas REST para posts
 Route::apiResource('posts', PostController::class);
+
+// Rotas de autenticação para API
+require __DIR__.'/auth.php';

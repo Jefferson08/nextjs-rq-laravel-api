@@ -17,29 +17,25 @@ import {
 } from "@/components/ui/sidebar";
 import { IconInnerShadowTop } from "@tabler/icons-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+// Navigation items
+const navMain = [
+  {
+    title: "Posts",
+    url: "/posts",
+    icon: TableProperties,
   },
-  navMain: [
-    {
-      title: "Posts",
-      url: "/posts",
-      icon: TableProperties,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-    },
-  ],
-};
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings2,
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth({ middleware: "auth" });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -58,10 +54,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -1,5 +1,5 @@
 // app/(protected)/layout.tsx
-import SidebarLayout from "@/layouts/sidebar-layout";
+import { ProtectedPageWrapper } from "@/components/protected-page-wrapper";
 import { cookies } from "next/headers";
 
 export default async function Layout({
@@ -11,5 +11,9 @@ export default async function Layout({
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
-  return <SidebarLayout defaultOpen={defaultOpen}>{children}</SidebarLayout>;
+  return (
+    <ProtectedPageWrapper defaultOpen={defaultOpen}>
+      {children}
+    </ProtectedPageWrapper>
+  );
 }

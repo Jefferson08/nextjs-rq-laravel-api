@@ -46,9 +46,11 @@ import {
 } from "@tabler/icons-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPosts } from "@/lib/get-posts";
+import type { CreatePostData, UpdatePostData } from "@/lib/api";
+import { createPost, deletePost, getPosts, updatePost } from "@/lib/api";
 import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
-import { createColumns, type Post } from "./columns";
+import { createColumns } from "./columns";
+import type { Post } from "@/lib/api/types";
 import { UpsertPost } from "./upsert-post";
 
 export function PostsTable() {
@@ -128,26 +130,43 @@ export function PostsTable() {
     setEditingPost(null);
   };
 
-  const handleSubmitPost = async (data: any) => {
-    // TODO: Implementar a lógica de criação/edição via API
-    console.log("Post data:", data);
-    console.log("Is editing:", Boolean(editingPost));
+  const handleSubmitPost = async (data: CreatePostData) => {
+    try {
+      if (editingPost) {
+        // Editar post existente
+        await updatePost(editingPost.id, data as UpdatePostData);
+        console.log("✅ Post updated successfully");
+      } else {
+        // Criar novo post
+        await createPost(data);
+        console.log("✅ Post created successfully");
+      }
 
-    // Placeholder para a implementação da API
-    // if (editingPost) {
-    //   await updatePost(editingPost.id, data);
-    // } else {
-    //   await createPost(data);
-    // }
-
-    // Simular delay da API
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Invalidar a query para recarregar os dados
+      // TODO: Implementar invalidação do React Query quando necessário
+    } catch (error) {
+      console.error("❌ Error submitting post:", error);
+      throw error; // Re-throw para que o componente UpsertPost possa tratar
+    }
   };
 
-  const handleDeletePost = (post: Post) => {
-    // TODO: Implementar a lógica de deleção via API
-    console.log("Delete post:", post);
-    // Placeholder para confirmação e deleção
+  const handleDeletePost = async (post: Post) => {
+    try {
+      // TODO: Adicionar confirmação antes de deletar
+      const confirmed = window.confirm(
+        `Are you sure you want to delete the post "${post.title}"?`,
+      );
+
+      if (!confirmed) return;
+
+      await deletePost(post.id);
+      console.log("✅ Post deleted successfully");
+
+      // TODO: Implementar invalidação do React Query para recarregar dados
+    } catch (error) {
+      console.error("❌ Error deleting post:", error);
+      // TODO: Mostrar toast de erro para o usuário
+    }
   };
 
   // Criar colunas com callbacks
@@ -157,7 +176,7 @@ export function PostsTable() {
   });
 
   // 📊 React Table
-  const table = useReactTable({
+  const table = useReactTable<Post>({
     data: data?.posts ?? [],
     columns,
     pageCount: data?.lastPage ?? 0,
