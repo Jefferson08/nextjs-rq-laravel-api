@@ -48,13 +48,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPosts } from "@/lib/get-posts";
 import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
-import { columns, type Post } from "./columns";
+import { createColumns, type Post } from "./columns";
 import { UpsertPost } from "./upsert-post";
 
 export function PostsTable() {
   // 🎯 Estado local para seleção de linhas
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  
+
   // 🎯 Estado do modal de upsert
   const [isUpsertModalOpen, setIsUpsertModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -112,6 +112,50 @@ export function PostsTable() {
     queryParams.sort_dir,
   ]);
 
+  // 🎯 Handlers do modal
+  const handleOpenCreateModal = () => {
+    setEditingPost(null);
+    setIsUpsertModalOpen(true);
+  };
+
+  const handleOpenEditModal = (post: Post) => {
+    setEditingPost(post);
+    setIsUpsertModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsUpsertModalOpen(false);
+    setEditingPost(null);
+  };
+
+  const handleSubmitPost = async (data: any) => {
+    // TODO: Implementar a lógica de criação/edição via API
+    console.log("Post data:", data);
+    console.log("Is editing:", Boolean(editingPost));
+
+    // Placeholder para a implementação da API
+    // if (editingPost) {
+    //   await updatePost(editingPost.id, data);
+    // } else {
+    //   await createPost(data);
+    // }
+
+    // Simular delay da API
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  };
+
+  const handleDeletePost = (post: Post) => {
+    // TODO: Implementar a lógica de deleção via API
+    console.log("Delete post:", post);
+    // Placeholder para confirmação e deleção
+  };
+
+  // Criar colunas com callbacks
+  const columns = createColumns({
+    onEdit: handleOpenEditModal,
+    onDelete: handleDeletePost,
+  });
+
   // 📊 React Table
   const table = useReactTable({
     data: data?.posts ?? [],
@@ -143,41 +187,9 @@ export function PostsTable() {
       setPerPage(next.pageSize);
     },
     onRowSelectionChange: setRowSelection,
-  getCoreRowModel: getCoreRowModel(),
+    getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
-
-  // 🎯 Handlers do modal
-  const handleOpenCreateModal = () => {
-    setEditingPost(null);
-    setIsUpsertModalOpen(true);
-  };
-
-  const handleOpenEditModal = (post: Post) => {
-    setEditingPost(post);
-    setIsUpsertModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsUpsertModalOpen(false);
-    setEditingPost(null);
-  };
-
-  const handleSubmitPost = async (data: any) => {
-    // TODO: Implementar a lógica de criação/edição via API
-    console.log('Post data:', data);
-    console.log('Is editing:', Boolean(editingPost));
-    
-    // Placeholder para a implementação da API
-    // if (editingPost) {
-    //   await updatePost(editingPost.id, data);
-    // } else {
-    //   await createPost(data);
-    // }
-    
-    // Simular delay da API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  };
 
   return (
     <div className="w-full space-y-4">

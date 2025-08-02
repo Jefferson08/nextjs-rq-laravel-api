@@ -81,7 +81,15 @@ function ServerSortHeader(accessor: string, label: string) {
   };
 }
 
-export const columns: ColumnDef<Post>[] = [
+// Tipo para callbacks das ações
+interface ColumnCallbacks {
+  onEdit: (post: Post) => void;
+  onDelete: (post: Post) => void;
+}
+
+export const createColumns = (
+  callbacks: ColumnCallbacks,
+): ColumnDef<Post>[] => [
   // ✅ Seleção de linhas
   {
     id: "select",
@@ -158,19 +166,35 @@ export const columns: ColumnDef<Post>[] = [
   // ✅ Ações
   {
     id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <IconDotsVertical />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => {
+      const post = row.original;
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <IconDotsVertical />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => callbacks.onEdit(post)}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => callbacks.onDelete(post)}
+              className="text-destructive focus:text-destructive"
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
     enableHiding: false,
   },
 ];
+
+// Manter compatibilidade com a implementação anterior (sem callbacks)
+export const columns: ColumnDef<Post>[] = createColumns({
+  onEdit: () => {},
+  onDelete: () => {},
+});
