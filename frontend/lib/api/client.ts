@@ -151,18 +151,18 @@ apiClient.interceptors.response.use(
 // Interceptor para authClient (rotas de autenticação)
 authClient.interceptors.request.use(
   async (config) => {
-    // Buscar CSRF token para métodos que modificam dados
-    if (
-      config.method &&
-      ["post", "put", "patch", "delete"].includes(config.method.toLowerCase())
-    ) {
+    // Para rotas de autenticação, sempre garantir CSRF token
+    try {
       await ensureCsrfToken();
-
+      
       // Adicionar CSRF token no header
       const csrfToken = getCSRFToken();
       if (csrfToken) {
         config.headers["X-XSRF-TOKEN"] = csrfToken;
       }
+    } catch (csrfError) {
+      console.error("Failed to get CSRF token for auth request:", csrfError);
+      // Continue mesmo se falhar o CSRF - pode ser que o servidor não exija
     }
 
     console.log(

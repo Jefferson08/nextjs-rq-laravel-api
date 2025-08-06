@@ -72,6 +72,7 @@ export const useAuth = ({
 
     try {
       const response = await authService.login(data);
+      // Revalidar o usuário após login bem-sucedido
       await mutateUser();
       router.push("/posts");
       return response;
@@ -140,8 +141,10 @@ export const useAuth = ({
     if (middleware === "guest" && redirectIfAuthenticated && user) {
       router.push(redirectIfAuthenticated);
     }
-    if (middleware === "auth" && error) {
-      logout();
+    if (middleware === "auth" && error && error?.status !== 401) {
+      // Apenas fazer logout para erros que não sejam 401 (não autenticado)
+      // 401 é tratado naturalmente pelo SWR retornando user = undefined
+      console.error("Auth error (non-401):", error);
     }
   }, [user, error, middleware, redirectIfAuthenticated, router]);
 
