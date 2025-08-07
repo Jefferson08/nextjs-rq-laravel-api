@@ -8,6 +8,8 @@ export interface Post {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  // Propriedade opcional para indicar posts em estado de pending (optimistic updates)
+  _isPending?: boolean;
 }
 
 // Tipos para criação/edição de Post

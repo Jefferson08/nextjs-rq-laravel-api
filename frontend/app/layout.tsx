@@ -1,5 +1,6 @@
 import { SWRProvider } from "@/providers/swr-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -29,6 +30,7 @@ export default function RootLayout({
       >
         <SWRProvider>
           <ThemeProvider>{children}</ThemeProvider>
+          <Toaster />
         </SWRProvider>
       </body>
     </html>
