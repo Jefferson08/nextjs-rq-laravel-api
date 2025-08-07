@@ -10,7 +10,14 @@ export { postsService } from "./posts";
 export { authService } from "./auth";
 
 // Exportar funções individuais para compatibilidade
-export { getPosts, getPost, createPost, updatePost, deletePost } from "./posts";
+export {
+  getPosts,
+  getPost,
+  createPost,
+  updatePost,
+  deletePost,
+  bulkDeletePosts,
+} from "./posts";
 
 export {
   login,

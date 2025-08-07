@@ -1,4 +1,3 @@
-import { formatDatePtBr } from "../date-format";
 import { apiClient } from "./client";
 import type {
   CreatePostData,
@@ -74,6 +73,19 @@ export const postsService = {
     await apiClient.delete(`/posts/${id}`);
   },
 
+  // 🗑️ Deletar múltiplos posts
+  async bulkDeletePosts(
+    ids: number[],
+  ): Promise<{ deleted_count: number; message: string }> {
+    const response = await apiClient.delete<{
+      deleted_count: number;
+      message: string;
+    }>("/posts/bulk", {
+      data: { ids },
+    });
+    return response.data;
+  },
+
   // 📊 Estatísticas de posts (se você quiser implementar no futuro)
   async getPostsStats(): Promise<{
     total: number;
@@ -93,3 +105,4 @@ export const getPost = postsService.getPost;
 export const createPost = postsService.createPost;
 export const updatePost = postsService.updatePost;
 export const deletePost = postsService.deletePost;
+export const bulkDeletePosts = postsService.bulkDeletePosts;

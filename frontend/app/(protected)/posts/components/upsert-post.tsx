@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconCalendar, IconClock } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -242,7 +242,7 @@ export function UpsertPost({
                       currentTime.getHours(),
                       currentTime.getMinutes(),
                       currentTime.getSeconds(),
-                      currentTime.getMilliseconds()
+                      currentTime.getMilliseconds(),
                     );
                   } else {
                     // Se não existe data, usar horário atual
@@ -251,10 +251,10 @@ export function UpsertPost({
                       now.getHours(),
                       now.getMinutes(),
                       0,
-                      0
+                      0,
                     );
                   }
-                  
+
                   field.onChange(selectedDate);
                 };
 
@@ -262,30 +262,30 @@ export function UpsertPost({
                   if (!field.value) {
                     // Se não há data selecionada, usar hoje com o horário escolhido
                     const today = new Date();
-                    const [hours, minutes] = timeString.split(':').map(Number);
+                    const [hours, minutes] = timeString.split(":").map(Number);
                     today.setHours(hours, minutes, 0, 0);
                     field.onChange(today);
                     return;
                   }
 
                   const newDate = new Date(field.value);
-                  const [hours, minutes] = timeString.split(':').map(Number);
+                  const [hours, minutes] = timeString.split(":").map(Number);
                   newDate.setHours(hours, minutes, 0, 0);
                   field.onChange(newDate);
                 };
 
                 const formatTime = (date: Date) => {
-                  return date.toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
+                  return date.toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
                   });
                 };
 
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Published Date & Time (Optional)</FormLabel>
-                    
+
                     {/* Data Selector */}
                     <Popover>
                       <PopoverTrigger asChild>
@@ -299,7 +299,8 @@ export function UpsertPost({
                           >
                             {field.value ? (
                               <span>
-                                {formatDatePPP(field.value)} às {formatTime(field.value)}
+                                {formatDatePPP(field.value)} às{" "}
+                                {formatTime(field.value)}
                               </span>
                             ) : (
                               <span>Pick a date and time</span>
@@ -352,7 +353,7 @@ export function UpsertPost({
                         </Button>
                       </div>
                     )}
-                    
+
                     <FormMessage />
                   </FormItem>
                 );

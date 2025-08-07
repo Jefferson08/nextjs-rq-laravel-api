@@ -10,5 +10,8 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 // Rotas REST para posts (protegidas por autenticação)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Rota para bulk delete - deve vir ANTES do apiResource
+    Route::delete('posts/bulk', [PostController::class, 'bulkDestroy'])->name('posts.bulk-destroy');
+    
     Route::apiResource('posts', PostController::class);
 });

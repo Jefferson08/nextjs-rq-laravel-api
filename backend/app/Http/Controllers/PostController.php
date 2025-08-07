@@ -114,4 +114,25 @@ class PostController extends Controller
 
         return response()->noContent();
     }
+
+    /**
+     * Remove multiple resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        // ⏳ Delay de 2 segundos para demonstrar optimistic updates
+        sleep(2);
+        
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:posts,id'
+        ]);
+
+        $deletedCount = Post::whereIn('id', $validated['ids'])->delete();
+
+        return response()->json([
+            'message' => "Deleted {$deletedCount} posts successfully",
+            'deleted_count' => $deletedCount
+        ]);
+    }
 }

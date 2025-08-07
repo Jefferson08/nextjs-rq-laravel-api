@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  IconAlertTriangle,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -44,16 +45,9 @@ import {
   IconChevronsRight,
   IconLayoutColumns,
   IconPlus,
-  IconAlertTriangle,
+  IconTrash,
 } from "@tabler/icons-react";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import type { CreatePostData, UpdatePostData } from "@/lib/api";
-import { createPost, deletePost, getPosts, updatePost } from "@/lib/api";
-import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
-import { createColumns } from "./columns";
-import type { Post } from "@/lib/api/types";
-import { UpsertPost } from "./upsert-post";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,20 +58,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { CreatePostData, UpdatePostData } from "@/lib/api";
+import {
+  bulkDeletePosts,
+  createPost,
+  deletePost,
+  getPosts,
+  updatePost,
+} from "@/lib/api";
+import type { Post, PostsResponse } from "@/lib/api/types";
+import { postsQueryDefault, postsQuerySchema } from "../posts-query-schema";
+import { createColumns } from "./columns";
+import { UpsertPost } from "./upsert-post";
 
 export function PostsTable() {
   const queryClient = useQueryClient();
-  
+
   // 🎯 Estado local para seleção de linhas
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // 🎯 Estado do modal de upsert
   const [isUpsertModalOpen, setIsUpsertModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  
+
   // 🗑️ Estado do dialog de confirmação de exclusão
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
+
+  // 🗑️ Estado do dialog de confirmação de bulk delete
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
   // 🌱 URL Params (nuqs)
   const [pageRaw, setPage] = useQueryState(
@@ -133,17 +143,17 @@ export function PostsTable() {
   ]);
 
   // 🚀 Mutations com Optimistic Updates
-  
+
   // Mutation para criar post
   const createPostMutation = useMutation({
     mutationFn: createPost,
     onMutate: async (newPost) => {
       // Cancelar queries existentes para evitar conflitos
       await queryClient.cancelQueries({ queryKey: ["posts", queryParams] });
-      
+
       // Pegar snapshot dos dados anteriores
       const previousPosts = queryClient.getQueryData(["posts", queryParams]);
-      
+
       // Criar post temporário com ID negativo (indicativo de pending)
       const tempPost: Post = {
         id: -Date.now(), // ID temporário negativo
@@ -151,23 +161,34 @@ export function PostsTable() {
         content: newPost.content,
         author: newPost.author,
         status: newPost.status,
-        published_at: newPost.published_at ? new Date(newPost.published_at).toISOString() : null,
+        published_at: newPost.published_at
+          ? new Date(newPost.published_at).toISOString()
+          : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         // Marcar como pending para aplicar estilo diferente
-        _isPending: true
+        _isPending: true,
       };
-      
+
       // Optimistically update cache
-      queryClient.setQueryData(["posts", queryParams], (old: any) => {
-        if (!old) return { posts: [tempPost], total: 1, currentPage: 1, lastPage: 1, perPage: queryParams.per_page };
+      queryClient.setQueryData(["posts", queryParams], (old: unknown) => {
+        const previousData = old as PostsResponse | undefined;
+        if (!previousData) {
+          return {
+            posts: [tempPost],
+            total: 1,
+            currentPage: 1,
+            lastPage: 1,
+            perPage: queryParams.per_page,
+          };
+        }
         return {
-          ...old,
-          posts: [tempPost, ...old.posts],
-          total: old.total + 1
+          ...previousData,
+          posts: [tempPost, ...previousData.posts],
+          total: previousData.total + 1,
         };
       });
-      
+
       return { previousPosts };
     },
     onError: (err, newPost, context) => {
@@ -176,56 +197,58 @@ export function PostsTable() {
         queryClient.setQueryData(["posts", queryParams], context.previousPosts);
       }
       toast.error("❌ Erro ao criar post", {
-        description: "Não foi possível criar o post. Tente novamente."
+        description: "Não foi possível criar o post. Tente novamente.",
       });
     },
     onSuccess: (data) => {
       toast.success("✅ Post criado com sucesso!", {
-        description: `O post "${data.title}" foi criado.`
+        description: `O post "${data.title}" foi criado.`,
       });
     },
     onSettled: () => {
       // Sempre invalidar queries no final
       queryClient.invalidateQueries({ queryKey: ["posts", queryParams] });
-    }
+    },
   });
-  
+
   // Mutation para atualizar post
   const updatePostMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: UpdatePostData }) => updatePost(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdatePostData }) =>
+      updatePost(id, data),
     onMutate: async ({ id, data }) => {
       // Cancelar queries existentes para evitar conflitos
       await queryClient.cancelQueries({ queryKey: ["posts", queryParams] });
-      
+
       // Pegar snapshot dos dados anteriores
       const previousPosts = queryClient.getQueryData(["posts", queryParams]);
-      
+
       // Optimistically update cache
-      queryClient.setQueryData(["posts", queryParams], (old: any) => {
-        if (!old) return old;
-        
+      queryClient.setQueryData(["posts", queryParams], (old: unknown) => {
+        const previousData = old as PostsResponse | undefined;
+        if (!previousData) return previousData;
+
         return {
-          ...old,
-          posts: old.posts.map((post: Post) => {
+          ...previousData,
+          posts: previousData.posts.map((post: Post) => {
             if (post.id === id) {
               return {
                 ...post,
                 ...data,
                 // Converter published_at para string se for Date
-                published_at: data.published_at 
-                  ? (data.published_at instanceof Date 
-                      ? data.published_at.toISOString() 
-                      : data.published_at)
+                published_at: data.published_at
+                  ? data.published_at instanceof Date
+                    ? data.published_at.toISOString()
+                    : data.published_at
                   : post.published_at,
                 updated_at: new Date().toISOString(),
-                _isPending: true // Marcar como pendente
+                _isPending: true, // Marcar como pendente
               };
             }
             return post;
-          })
+          }),
         };
       });
-      
+
       return { previousPosts };
     },
     onError: (err, variables, context) => {
@@ -234,37 +257,38 @@ export function PostsTable() {
         queryClient.setQueryData(["posts", queryParams], context.previousPosts);
       }
       toast.error("❌ Erro ao atualizar post", {
-        description: "Não foi possível atualizar o post. Tente novamente."
+        description: "Não foi possível atualizar o post. Tente novamente.",
       });
     },
     onSuccess: (data) => {
       toast.success("✅ Post atualizado com sucesso!", {
-        description: `O post "${data.title}" foi atualizado.`
+        description: `O post "${data.title}" foi atualizado.`,
       });
     },
     onSettled: () => {
       // Sempre invalidar queries no final
       queryClient.invalidateQueries({ queryKey: ["posts", queryParams] });
-    }
+    },
   });
-  
+
   // Mutation para deletar post
   const deletePostMutation = useMutation({
     mutationFn: deletePost,
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: ["posts", queryParams] });
       const previousPosts = queryClient.getQueryData(["posts", queryParams]);
-      
+
       // Optimistically remove from cache
-      queryClient.setQueryData(["posts", queryParams], (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData(["posts", queryParams], (old: unknown) => {
+        const previousData = old as PostsResponse | undefined;
+        if (!previousData) return previousData;
         return {
-          ...old,
-          posts: old.posts.filter((post: Post) => post.id !== postId),
-          total: old.total - 1
+          ...previousData,
+          posts: previousData.posts.filter((post: Post) => post.id !== postId),
+          total: previousData.total - 1,
         };
       });
-      
+
       return { previousPosts };
     },
     onError: (err, postId, context) => {
@@ -272,7 +296,7 @@ export function PostsTable() {
         queryClient.setQueryData(["posts", queryParams], context.previousPosts);
       }
       toast.error("❌ Erro ao deletar post", {
-        description: "Não foi possível deletar o post. Tente novamente."
+        description: "Não foi possível deletar o post. Tente novamente.",
       });
     },
     onSuccess: () => {
@@ -280,7 +304,51 @@ export function PostsTable() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["posts", queryParams] });
-    }
+    },
+  });
+
+  // Mutation para bulk delete posts
+  const bulkDeletePostsMutation = useMutation({
+    mutationFn: bulkDeletePosts,
+    onMutate: async (postIds) => {
+      await queryClient.cancelQueries({ queryKey: ["posts", queryParams] });
+      const previousPosts = queryClient.getQueryData(["posts", queryParams]);
+
+      // Optimistically remove multiple posts from cache
+      queryClient.setQueryData(["posts", queryParams], (old: unknown) => {
+        const previousData = old as PostsResponse | undefined;
+        if (!previousData) return previousData;
+        return {
+          ...previousData,
+          posts: previousData.posts.filter(
+            (post: Post) => !postIds.includes(post.id),
+          ),
+          total: previousData.total - postIds.length,
+        };
+      });
+
+      return { previousPosts };
+    },
+    onError: (err, postIds, context) => {
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["posts", queryParams], context.previousPosts);
+      }
+      toast.error("❌ Erro ao deletar posts", {
+        description:
+          "Não foi possível deletar os posts selecionados. Tente novamente.",
+      });
+    },
+    onSuccess: (data) => {
+      toast.success("✅ Posts deletados com sucesso!", {
+        description: `${data.deleted_count} posts foram removidos.`,
+      });
+      // Limpar seleção após sucesso
+      setRowSelection({});
+      setIsBulkDeleteDialogOpen(false);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts", queryParams] });
+    },
   });
 
   // 🎯 Handlers do modal
@@ -293,11 +361,11 @@ export function PostsTable() {
     // Bloquear edição de posts pendentes
     if (post._isPending) {
       toast.warning("⏳ Post está sendo processado", {
-        description: "Aguarde a conclusão da operação atual antes de editar."
+        description: "Aguarde a conclusão da operação atual antes de editar.",
       });
       return;
     }
-    
+
     setEditingPost(post);
     setIsUpsertModalOpen(true);
   };
@@ -310,7 +378,10 @@ export function PostsTable() {
   const handleSubmitPost = async (data: CreatePostData) => {
     if (editingPost) {
       // Editar post existente
-      updatePostMutation.mutate({ id: editingPost.id, data: data as UpdatePostData });
+      updatePostMutation.mutate({
+        id: editingPost.id,
+        data: data as UpdatePostData,
+      });
     } else {
       // Criar novo post
       createPostMutation.mutate(data);
@@ -322,20 +393,55 @@ export function PostsTable() {
     if (post._isPending) {
       const action = post.id < 0 ? "sendo criado" : "sendo editado";
       toast.warning(`⏳ Post está ${action}`, {
-        description: "Aguarde a conclusão da operação antes de deletar."
+        description: "Aguarde a conclusão da operação antes de deletar.",
       });
       return;
     }
-    
+
     // Abrir dialog de confirmação
     setPostToDelete(post);
     setIsDeleteDialogOpen(true);
   };
-  
+
   const handleConfirmDelete = () => {
     if (postToDelete) {
       deletePostMutation.mutate(postToDelete.id);
       setPostToDelete(null);
+    }
+  };
+
+  // 🗑️ Handlers do bulk delete
+  const handleBulkDelete = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedPosts = selectedRows.map((row) => row.original);
+
+    // Verificar se há posts pendentes selecionados
+    const hasPendingPosts = selectedPosts.some((post) => post._isPending);
+    if (hasPendingPosts) {
+      toast.warning("⏳ Operação não permitida", {
+        description:
+          "Não é possível deletar posts que estão sendo processados. Aguarde a conclusão das operações pendentes.",
+      });
+      return;
+    }
+
+    if (selectedRows.length === 0) {
+      toast.warning("⚠️ Nenhum post selecionado", {
+        description: "Selecione pelo menos um post para deletar.",
+      });
+      return;
+    }
+
+    // Abrir dialog de confirmação
+    setIsBulkDeleteDialogOpen(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const postIds = selectedRows.map((row) => row.original.id);
+
+    if (postIds.length > 0) {
+      bulkDeletePostsMutation.mutate(postIds);
     }
   };
 
@@ -380,11 +486,16 @@ export function PostsTable() {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  // Calcular dados das seleções (depois da declaração do table)
+  const selectedRowsCount = table.getFilteredSelectedRowModel().rows.length;
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const selectedPosts = selectedRows.map((row) => row.original);
+
   return (
     <div className="w-full space-y-4">
       {/* Filters */}
       <div className="flex items-center justify-between gap-4">
-        {/* 🔍 Left side: Search + Status Filter */}
+        {/* 🔍 Left side: Search + Bulk Delete + Status Filter */}
         <div className="flex items-center gap-4">
           {/* Search */}
           <Input
@@ -423,6 +534,22 @@ export function PostsTable() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Bulk Delete Button - Aparecer apenas quando há seleções */}
+          {selectedRowsCount > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={bulkDeletePostsMutation.isPending}
+            >
+              <IconTrash className="h-4 w-4" />
+              <span className="ml-2">
+                Delete {selectedRowsCount}{" "}
+                {selectedRowsCount === 1 ? "post" : "posts"}
+              </span>
+            </Button>
+          )}
         </div>
 
         {/* 🏷 Right side: Columns + Add Post */}
@@ -503,9 +630,11 @@ export function PostsTable() {
               table.getRowModel().rows.map((row) => {
                 const post = row.original;
                 return (
-                  <TableRow 
+                  <TableRow
                     key={row.id}
-                    className={post._isPending ? "bg-muted/30 animate-pulse" : ""}
+                    className={
+                      post._isPending ? "bg-muted/30 animate-pulse" : ""
+                    }
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
@@ -619,7 +748,10 @@ export function PostsTable() {
       />
 
       {/* 🗑️ Dialog de Confirmação de Exclusão com AlertDialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex items-center gap-3">
@@ -629,23 +761,26 @@ export function PostsTable() {
               <div>
                 <AlertDialogTitle>Excluir Post</AlertDialogTitle>
                 <AlertDialogDescription className="text-left mt-1">
-                  Tem certeza de que deseja excluir este post? Esta ação não pode ser desfeita.
+                  Tem certeza de que deseja excluir este post? Esta ação não
+                  pode ser desfeita.
                 </AlertDialogDescription>
               </div>
             </div>
           </AlertDialogHeader>
-          
+
           {postToDelete && (
             <div className="mt-4">
               <div className="rounded-md bg-muted p-3">
                 <p className="text-sm font-medium text-muted-foreground mb-1">
                   Post a ser excluído:
                 </p>
-                <p className="text-sm font-semibold truncate">{postToDelete.title}</p>
+                <p className="text-sm font-semibold truncate">
+                  {postToDelete.title}
+                </p>
               </div>
             </div>
           )}
-          
+
           <AlertDialogFooter className="gap-2 sm:gap-2">
             <AlertDialogCancel disabled={deletePostMutation.isPending}>
               Cancelar
@@ -656,6 +791,64 @@ export function PostsTable() {
               disabled={deletePostMutation.isPending}
             >
               {deletePostMutation.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 🗑️ Dialog de Confirmação de Bulk Delete */}
+      <AlertDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                <IconAlertTriangle className="h-6 w-6 text-destructive" />
+              </div>
+              <div>
+                <AlertDialogTitle>Excluir Posts Selecionados</AlertDialogTitle>
+                <AlertDialogDescription className="text-left mt-1">
+                  Tem certeza de que deseja excluir {selectedRowsCount} post
+                  {selectedRowsCount === 1 ? "" : "s"} selecionado
+                  {selectedRowsCount === 1 ? "" : "s"}? Esta ação não pode ser
+                  desfeita.
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+
+          {selectedPosts.length > 0 && (
+            <div className="mt-4">
+              <div className="rounded-md bg-muted p-3 max-h-48 overflow-y-auto">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Posts a serem excluídos:
+                </p>
+                <div className="space-y-1">
+                  {selectedPosts.map((post) => (
+                    <div key={post.id} className="text-sm">
+                      <span className="font-medium">{post.id}</span> -
+                      <span className="truncate ml-1">{post.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel disabled={bulkDeletePostsMutation.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmBulkDelete}
+              disabled={bulkDeletePostsMutation.isPending}
+            >
+              {bulkDeletePostsMutation.isPending
+                ? `Excluindo ${selectedRowsCount} post${selectedRowsCount === 1 ? "" : "s"}...`
+                : `Excluir ${selectedRowsCount} post${selectedRowsCount === 1 ? "" : "s"}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

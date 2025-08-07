@@ -6,11 +6,10 @@ import { useRouter } from "next/navigation";
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  fallback?: React.ReactNode;
 }
 
-export function AuthGuard({ children, fallback = null }: AuthGuardProps) {
-  const { user, isLoading, isAuthenticated } = useAuth({ middleware: "auth" });
+export function AuthGuard({ children }: AuthGuardProps) {
+  const { isLoading, isAuthenticated } = useAuth({ middleware: "auth" });
   const router = useRouter();
 
   useEffect(() => {

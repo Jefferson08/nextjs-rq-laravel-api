@@ -154,7 +154,7 @@ authClient.interceptors.request.use(
     // Para rotas de autenticação, sempre garantir CSRF token
     try {
       await ensureCsrfToken();
-      
+
       // Adicionar CSRF token no header
       const csrfToken = getCSRFToken();
       if (csrfToken) {

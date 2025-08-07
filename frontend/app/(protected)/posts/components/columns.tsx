@@ -122,7 +122,11 @@ export const createColumns = (
       const post = row.original;
       return (
         <span className={post._isPending ? "text-muted-foreground italic" : ""}>
-          {post.id < 0 ? "Criando..." : (post._isPending ? `${post.id} (editando...)` : post.id)}
+          {post.id < 0
+            ? "Criando..."
+            : post._isPending
+              ? `${post.id} (editando...)`
+              : post.id}
         </span>
       );
     },
@@ -136,11 +140,14 @@ export const createColumns = (
     cell: ({ row }) => {
       const post = row.original;
       return (
-        <div className={cn(
-          "truncate max-w-[250px]",
-          post._isPending && "text-muted-foreground italic opacity-75"
-        )}>
-          {post.title} {post._isPending && (post.id < 0 ? "(criando...)" : "(editando...)")}
+        <div
+          className={cn(
+            "truncate max-w-[250px]",
+            post._isPending && "text-muted-foreground italic opacity-75",
+          )}
+        >
+          {post.title}{" "}
+          {post._isPending && (post.id < 0 ? "(criando...)" : "(editando...)")}
         </div>
       );
     },
@@ -176,7 +183,7 @@ export const createColumns = (
 
       try {
         return <span>{formatDateTimeBR(publishedAt)}</span>;
-      } catch (error) {
+      } catch {
         return <span>—</span>;
       }
     },
