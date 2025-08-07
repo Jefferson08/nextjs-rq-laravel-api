@@ -118,7 +118,14 @@ export const createColumns = (
   {
     accessorKey: "id",
     header: "ID",
-    cell: ({ row }) => <span>{row.original.id}</span>,
+    cell: ({ row }) => {
+      const post = row.original;
+      return (
+        <span className={post._isPending ? "text-muted-foreground italic" : ""}>
+          {post.id < 0 ? "Criando..." : (post._isPending ? `${post.id} (editando...)` : post.id)}
+        </span>
+      );
+    },
     enableHiding: false,
   },
 
@@ -126,9 +133,17 @@ export const createColumns = (
   {
     accessorKey: "title",
     header: ServerSortHeader("title", "Title"),
-    cell: ({ row }) => (
-      <div className="truncate max-w-[250px]">{row.original.title}</div>
-    ),
+    cell: ({ row }) => {
+      const post = row.original;
+      return (
+        <div className={cn(
+          "truncate max-w-[250px]",
+          post._isPending && "text-muted-foreground italic opacity-75"
+        )}>
+          {post.title} {post._isPending && (post.id < 0 ? "(criando...)" : "(editando...)")}
+        </div>
+      );
+    },
   },
 
   // ✅ Author (sortable)
