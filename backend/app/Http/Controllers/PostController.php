@@ -46,6 +46,9 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        // ⏳ Delay de 1.5 segundos para demonstrar optimistic updates
+        sleep(1.5);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -77,6 +80,9 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
+        // ⏳ Delay de 1.5 segundos para demonstrar optimistic updates
+        sleep(1.5);
+        
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'content' => 'sometimes|required|string',
@@ -101,6 +107,9 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
+        // ⏳ Delay de 1.5 segundos para demonstrar optimistic updates
+        sleep(1.5);
+        
         $post->delete();
 
         return response()->noContent();
