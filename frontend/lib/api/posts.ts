@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { formatDatePtBr } from "../date-format";
 import { apiClient } from "./client";
 import type {
   CreatePostData,
@@ -11,8 +11,9 @@ import type {
 } from "./types";
 
 // Função helper para converter Date para string no formato que o Laravel espera
+// Usa toISOString() que sempre retorna em UTC
 const formatDateForAPI = (date: Date): string => {
-  return format(date, "yyyy-MM-dd HH:mm:ss");
+  return date.toISOString();
 };
 
 // Função helper para preparar os dados para envio

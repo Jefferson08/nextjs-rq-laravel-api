@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconCalendar } from "@tabler/icons-react";
-import { format } from "date-fns";
-import { useEffect } from "react";
+import { IconCalendar, IconClock } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { formatDatePPP } from "@/lib/date-format";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -227,43 +228,135 @@ export function UpsertPost({
             <FormField
               control={form.control}
               name="published_at"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Published Date (Optional)</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
+              render={({ field }) => {
+                const handleDateSelect = (selectedDate: Date | undefined) => {
+                  if (!selectedDate) {
+                    field.onChange(undefined);
+                    return;
+                  }
+
+                  // Se já existe uma data, preservar o horário
+                  if (field.value) {
+                    const currentTime = field.value;
+                    selectedDate.setHours(
+                      currentTime.getHours(),
+                      currentTime.getMinutes(),
+                      currentTime.getSeconds(),
+                      currentTime.getMilliseconds()
+                    );
+                  } else {
+                    // Se não existe data, usar horário atual
+                    const now = new Date();
+                    selectedDate.setHours(
+                      now.getHours(),
+                      now.getMinutes(),
+                      0,
+                      0
+                    );
+                  }
+                  
+                  field.onChange(selectedDate);
+                };
+
+                const handleTimeChange = (timeString: string) => {
+                  if (!field.value) {
+                    // Se não há data selecionada, usar hoje com o horário escolhido
+                    const today = new Date();
+                    const [hours, minutes] = timeString.split(':').map(Number);
+                    today.setHours(hours, minutes, 0, 0);
+                    field.onChange(today);
+                    return;
+                  }
+
+                  const newDate = new Date(field.value);
+                  const [hours, minutes] = timeString.split(':').map(Number);
+                  newDate.setHours(hours, minutes, 0, 0);
+                  field.onChange(newDate);
+                };
+
+                const formatTime = (date: Date) => {
+                  return date.toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  });
+                };
+
+                return (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Published Date & Time (Optional)</FormLabel>
+                    
+                    {/* Data Selector */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            {field.value ? (
+                              <span>
+                                {formatDatePPP(field.value)} às {formatTime(field.value)}
+                              </span>
+                            ) : (
+                              <span>Pick a date and time</span>
+                            )}
+                            <IconCalendar className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={handleDateSelect}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Time Selector - só aparece se uma data foi selecionada */}
+                    {field.value && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <IconClock className="h-4 w-4 opacity-50" />
+                        <Input
+                          type="time"
+                          value={formatTime(field.value)}
+                          onChange={(e) => handleTimeChange(e.target.value)}
+                          className="w-32"
+                        />
                         <Button
+                          type="button"
                           variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
+                          size="sm"
+                          onClick={() => {
+                            const now = new Date();
+                            handleTimeChange(formatTime(now));
+                          }}
                         >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <IconCalendar className="ml-auto h-4 w-4 opacity-50" />
+                          Agora
                         </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => field.onChange(undefined)}
+                        >
+                          Limpar
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <DialogFooter className="gap-2 pt-4">

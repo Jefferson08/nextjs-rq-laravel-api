@@ -20,9 +20,9 @@ class PostResource extends JsonResource
             'content' => $this->content,
             'author' => $this->author,
             'status' => $this->status,
-            'published_at' => optional($this->published_at)->toDateTimeString(),
-            'created_at' => $this->created_at->toDateTimeString(),
-            'updated_at' => $this->updated_at->toDateTimeString(),
+            'published_at' => optional($this->published_at)->toISOString(),
+            'created_at' => $this->created_at->toISOString(),
+            'updated_at' => $this->updated_at->toISOString(),
         ];
     }
 }

@@ -20,6 +20,7 @@ import { z } from "zod";
 
 import { parseAsString, useQueryState } from "nuqs";
 import type { Post } from "@/lib/api/types";
+import { formatDateTimeBR } from "@/lib/date-format";
 
 // 📦 Schema para validar os posts (mantido para compatibilidade se necessário)
 export const schema = z.object({
@@ -158,10 +159,11 @@ export const createColumns = (
       const publishedAt = row.original.published_at;
       if (!publishedAt) return <span>—</span>;
 
-      const date = new Date(publishedAt);
-      return (
-        <span>{isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}</span>
-      );
+      try {
+        return <span>{formatDateTimeBR(publishedAt)}</span>;
+      } catch (error) {
+        return <span>—</span>;
+      }
     },
   },
 

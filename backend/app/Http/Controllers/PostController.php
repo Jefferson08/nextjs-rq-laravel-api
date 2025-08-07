@@ -54,6 +54,11 @@ class PostController extends Controller
             'published_at' => 'nullable|date',
         ]);
 
+        // Se published_at não foi fornecida e o status é 'published', definir a data atual
+        if (!isset($validated['published_at']) && $validated['status'] === 'published') {
+            $validated['published_at'] = now();
+        }
+
         $post = Post::create($validated);
 
         return new PostResource($post);
@@ -79,6 +84,12 @@ class PostController extends Controller
             'status' => 'sometimes|required|in:draft,published,archived',
             'published_at' => 'nullable|date',
         ]);
+
+        // Se o status está mudando para 'published' e não há published_at definido, usar data atual
+        if (isset($validated['status']) && $validated['status'] === 'published' && 
+            !isset($validated['published_at']) && is_null($post->published_at)) {
+            $validated['published_at'] = now();
+        }
 
         $post->update($validated);
 
